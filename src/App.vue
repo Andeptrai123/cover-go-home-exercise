@@ -1,30 +1,55 @@
+<!-- src/App.vue -->
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import { ref, reactive } from "vue";
+import WelcomePage from "./components/WelcomePage.vue";
+import UserInfoPage from "./components/UserInfoPage.vue";
+import { FormData } from "./types";
+import SummaryPage from "./components/SummaryPage.vue";
+import AgeErrorPage from "./components/AgeErrorPage.vue";
+
+const currentStep = ref<number | "error">(1);
+let formData = reactive<FormData>({
+  name: "",
+  age: 0,
+  country: "HKD",
+  package: "standard",
+  premium_total: 0,
+});
+
+const handleNext = () =>
+  (currentStep.value = (currentStep.value as number) + 1);
+const handleBack = () =>
+  (currentStep.value = (currentStep.value as number) - 1);
+const handleReset = () => {
+  currentStep.value = 1;
+  formData = reactive<FormData>({
+    name: "",
+    age: 0,
+    country: "HKD",
+    package: "standard",
+    premium_total: 0,
+  });
+};
 </script>
 
 <template>
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <HelloWorld msg="Vite + Vue" />
-</template>
+  <div class="min-h-screen bg-gray-50 py-8">
+    <WelcomePage v-if="currentStep === 1" @start="handleNext" />
+    <UserInfoPage
+      v-if="currentStep === 2"
+      v-model:form-data="formData"
+      @next="handleNext"
+      @back="handleBack"
+      @error="currentStep = 'error'"
+    />
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>
+    <SummaryPage
+      v-if="currentStep === 3"
+      :form-data="formData"
+      @back="handleBack"
+      @buy="handleReset"
+    />
+
+    <AgeErrorPage v-if="currentStep === 'error'" @back="handleReset" />
+  </div>
+</template>
